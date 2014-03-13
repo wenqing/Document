@@ -1,0 +1,130 @@
+
+\documentclass[10pt, a4paper]{article}
+\usepackage{ae} % or {zefonts}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage{graphicx}
+\usepackage{fancybox}
+\usepackage{color}
+%%\usepackage{caption2}
+\usepackage[colorlinks]{hyperref}
+\usepackage{epic,eepic}
+\usepackage{pstricks}
+\usepackage{amssymb, amsmath, bm}
+\usepackage{listings}
+
+\usepackage{epsfig}
+\usepackage{pst-grad} % For gradients
+\usepackage{pst-plot} % For axes
+
+
+\addtolength{\textwidth}{1.5cm} \addtolength{\textheight}{4cm}
+ \addtolength{\voffset}{-2cm}
+% ------------------------------------------------------------------------
+% Document Starts here:
+% ------------------------------------------------------------------------
+% %\title{\textbf{Programming notes:} Element material object }
+\title{Element material object }
+\author{WW}
+\begin{document}
+\maketitle
+
+A proposal of a material object for element or integration point level material data, ElementMaterial as 
+  
+% Generated with LaTeXDraw 2.0.8
+% Thu Mar 13 13:33:13 CET 2014
+% \usepackage[usenames,dvipsnames]{pstricks}
+% \usepackage{epsfig}
+% \usepackage{pst-grad} % For gradients
+% \usepackage{pst-plot} % For axes
+\scalebox{0.8} % Change this value to rescale the drawing.
+{
+\begin{pspicture}(0,-1.5)(18.56,1.5)
+\definecolor{color2}{rgb}{0.4,0.4,1.0}
+\definecolor{color0}{rgb}{1.0,0.0,0.4}
+\definecolor{color144}{rgb}{0.6,1.0,0.6}
+\definecolor{color145}{rgb}{0.2,0.6,1.0}
+\psframe[linewidth=0.04,linecolor=color0,dimen=outer](8.04,1.5)(5.14,0.38)
+\usefont{T1}{ptm}{m}{n}
+\rput(6.6025,0.95){\color{color2}ElementMaterial}
+\usefont{T1}{ptm}{m}{n}
+\rput(13.144062,1.25){This object manipulates all element/Guass point level material data}
+\usefont{T1}{ptm}{m}{n}
+\rput(11.539375,0.71){and it has only one instance for each PDE  }
+\psframe[linewidth=0.04,linecolor=color144,dimen=outer](4.68,-0.36)(0.0,-1.48)
+\usefont{T1}{ptm}{m}{n}
+\rput(2.3873436,-0.87){\color{color145}ElementMaterialGroundWater}
+\psframe[linewidth=0.04,linecolor=color144,dimen=outer](9.3,-0.36)(5.3,-1.48)
+\usefont{T1}{ptm}{m}{n}
+\rput(7.32,-0.87){\color{color145}ElementMaterialRichards}
+\psframe[linewidth=0.04,linecolor=color144,dimen=outer](14.48,-0.36)(9.8,-1.48)
+\usefont{T1}{ptm}{m}{n}
+\rput(11.8125,-0.87){\color{color145}ElementMaterialThermal}
+\psframe[linewidth=0.04,linecolor=color144,dimen=outer](18.56,-0.38)(15.12,-1.5)
+\usefont{T1}{ptm}{m}{n}
+\rput(16.698437,-0.89){\color{color145}ElementMaterial ...}
+\psline[linewidth=0.04cm,arrowsize=0.05291667cm 2.0,arrowlength=1.4,arrowinset=0.4]{->}(4.98,0.22)(3.04,-0.24)
+\psline[linewidth=0.04cm,arrowsize=0.05291667cm 2.0,arrowlength=1.4,arrowinset=0.4]{->}(6.66,0.26)(6.84,-0.14)
+\psline[linewidth=0.04cm,arrowsize=0.05291667cm 2.0,arrowlength=1.4,arrowinset=0.4]{->}(8.06,0.2)(10.64,-0.24)
+\psline[linewidth=0.04cm,arrowsize=0.05291667cm 2.0,arrowlength=1.4,arrowinset=0.4]{->}(8.48,0.34)(15.92,-0.14)
+\end{pspicture} 
+}
+
+The class definition of ElementMaterial should include the data buffer for local level material data from the input data, and methods to calculate the coefficients of the corresponding PDE.   
+
+\section*{Purpose} To distinguish the input data and the data used for the local assembly, while to keep every needed data for material in local level of the local assembly. How to store input material data is out of this topic.
+
+\section*{Usage}
+1. Create only one instance of ElementMaterial for each PDE to be solved at the beginning of the program with proper memory allocation for  element or integration point level material parameters, e.g.
+  
+ \begin{verbatim}
+  ElementMaterialRichards _elem_mat_richards(...); 
+ \end{verbatim} 
+  
+  \_elem\_mat could be a member of a PDE related class or a value for the argument of a global assembly function. 
+
+2. For each element in a global assembly, fetch material data from  he place they stored, whether element-wise vector or group-wise vector, to fill the variables of the ElementMaterial instance. To this purpose, the local assembly function should look like this:
+
+ \begin{verbatim}
+.. template <typename T_ELE_MATERIAL, ... > localAssembly(T_ELE_MATERIAL  &elem_mat, ... )
+{
+      for_all(gauss_points)
+      {
+           ..
+           ..
+           // e.g. for mass matrix
+           elem_mat.calMassCoef(..);
+           ..     
+      }
+}
+ \end{verbatim} 
+
+
+and the code for global assembly should looks like, e.g.
+     
+
+ \begin{verbatim}
+  
+     globalAssemblyRichards(_elem_mat_richards, ...  )
+    {
+         for_all(elements)
+         {
+           ...
+           // Get the input data stored in whichever types, element-wise or group-wise
+           // and fill the element material data.
+           _elem_mat_richards.setData(...);
+           
+           // Perform local assembly with a fucntion or explictily with a loop here after.
+           localAssembly(_elem_mat_richards ... );  
+           ..           
+         }     
+     
+    } 
+  \end{verbatim} 
+
+
+
+
+\end{document}
+
+
